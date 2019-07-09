@@ -26,11 +26,11 @@ module.exports = {
 
 优化前：
 
-!(优化前)[img/1.png]
+![优化前](img/1.png)
 
 优化后：
 
-!(优化后)[img/2.png]
+![优化后](img/2.png)
 
 ### 2.HappyPack
 
