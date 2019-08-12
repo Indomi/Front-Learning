@@ -122,8 +122,43 @@ const descriptor = Object.getOwnPropertyDescriptor(obj, 'a')
 ```
 ## 15. 构造函数
 ### new 的作用
-### 1）创建一个新对象
-### 2）将构造函数的作用域赋给新对象（this）
-### 3）执行构造函数中的代码
-### 4）返回这个新对象
+1）创建一个新对象
 
+2）将构造函数的作用域赋给新对象（this）
+
+3）执行构造函数中的代码
+
+4）返回这个新对象
+
+## 16. 原型模式
+
+- 创建了自定义的构造函数之后，其原型对象默认只会取得`constructor`属性，其他方法都是从`Object`继承而来的
+- 创建的新实例内部包含一个指针指向原型对象，叫做`[[Prototype]]`，在`Firefox`，`Safari`，`Chrome`中实现了`__proto__`属性能够访问到原型对象
+- 对于实例和原型对象的关系，可以使用`isPrototypeOf()`来检测
+```javascript
+function Person () {
+  this.name = 'John'
+}
+const person = new Person()
+Person.prototype.isPrototypeOf(person) // true
+Object.prototype.isPrototypeOf(person) // true
+
+// es5 新增 Object.getPrototypeOf() 返回 [[Prototype]] 的值
+// 兼容性IE9+
+Object.getPrototypeOf(person) == Person.prototype // true
+Object.getPrototypeOf(person).name // John
+```
+- 遍历所有可以/不可以枚举的实例属性，使用`Object.getOwnPropertyNames()`
+- **实例中的指针仅指向原型，而不指向构造函数**,也就是说实例访问原型是直接访问原型的指针，而不是通过访问构造函数的`prototype`属性间接访问的
+```javascript
+function Person () {}
+const person = new Person()
+Person.prototype = {
+  constructor: Person,
+  sayName: function() {
+    console.log('name')
+  }
+}
+person.sayName() // Error
+```
+![重写原型对象](./img/3.png)
