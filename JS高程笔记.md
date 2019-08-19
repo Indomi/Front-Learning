@@ -162,3 +162,192 @@ Person.prototype = {
 person.sayName() // Error
 ```
 ![重写原型对象](./img/3.png)
+
+## 17. 原型链继承
+### 17.1 组合继承（伪经典继承）
+
+- 借用构造函数来实现对实例属性的继承，以及利用原型链来继承原型对象的属性
+
+```javascript
+function Parent (name) {
+  this.name = name
+  this.color = ['red', 'blue', 'green']
+}
+Parent.prototype.sayName = function () {
+  console.log(this.name)
+}
+function Child (name, age) {
+  Parent.call(this, name)
+  this.age = age
+}
+Child.prototype = new Parent()
+Child.prototype.constructor = Child
+Child.prototype.sayAge = function () {
+  console.log(this.age)
+}
+
+var instance1 = new Child('a', 21)
+instance1.color.push('black')
+console.log(instance1.color) // red,blue,green,black
+instance1.sayName() // a
+instance1.sayAge() // 21
+
+var instance2 = new Child('b', 22)
+console.log(instance2.color) // red,blue,green
+instance2.sayName() // b
+instance2.sayAge() // 22
+```
+### 17.2 原型式继承
+```javascript
+function object(o) {
+  function F() {}
+  F.prototype = o
+  return new F()
+}
+```
+- 借助原型可以基于已有的对象创建新的对象
+- 必须有一个对象可以作为另一个对象的基础
+- es5通过新增`Object.create()`方法规范化了原型式继承
+```javascript
+// 兼容性IE9+
+var person = {
+  name: 'a'
+}
+var anotherPerson = Object.create(person, {
+  name: {
+    value: "Greg"
+  }
+})
+```
+### 17.3 寄生式继承
+- 思路类似于寄生构造函数和工厂模式，封装一个函数实现
+- 类似于构造函数模式，不能够做到函数复用，每次传入都需要生成新的函数
+```javascript
+function createAnother(o) {
+  var clone = object(o)
+  clone.sayHi = function() {
+    console.log('hi')
+  }
+  return clone
+}
+```
+### 17.4 寄生组合式继承
+- 解决了组合式继承方法，Child的原型对象上会多出Parent的实例属性，而Child的实例又拥有相同的属性覆盖了原型对象上属性的问题
+- 通过借用构造函数来继承属性，通过原型链的混成形式来继承方法
+
+```javascript
+function Parent(name) {
+  this.name = name
+  this.color = ['red', 'blue', 'green']
+}
+Praent.prototype.sayName = function() {
+  console.log(this.name)
+}
+function Child(name, age) {
+  Parent.call(this, name)
+  this.age = age
+}
+Child.prototype = Object.create(Parent.prototype, {
+  constructor: {
+    value: Child,
+    writable: true,
+    enumerable: false,
+    configurable: true
+  }
+})
+
+const child = new Child()
+child.sayName()
+```
+
+## 18. 创建对象（类）
+三种模式
+- 工厂模式：使用最基本的方法创建，然后返回这个对象
+- 构造函数模式：使用了`this`关键字去定义属性和方法，缺点是不能复用，比如函数
+- 原型模式：使用`prototype`来定义共享的属性或者方法
+
+## 19. 函数递归
+- 存在的问题：如果说函数内递归调用时，函数名称的变量值发生了改变，就会导致出错，对外界的依赖度太大
+- `arguments.callee`是指向正在执行函数的指针，严格模式下会报错
+```javascript
+function factorial(num) {
+  if (num <= 1) {
+    return 1
+  } else {
+    return num * factorial(num - 1)
+  }
+}
+// 尝试下面的情况
+var anotherFactorial = factorial
+factorial = null
+anotherFactorial(4) // 出错
+// 解决办法，使用arguments.callee
+function factorial(num) {
+  num <= 1 ? return 1 : return num * arguments.callee(num - 1)
+}
+// 严格模式下解决办法
+var factorial = (function f() {
+  num <= 1 ? return 1 : return num * f(num - 1)
+})
+```
+
+## 20. BOM
+- 获取屏幕宽高标准的顺序
+```javascript
+const screenW = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth
+const screenH = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight
+```
+- `document.location` 和 `window.location` 引用的是同一个对象
+- BOM的核心对象是`window`，在浏览器中，是ECMAScript规定的`Global`对象
+- 全局定义的变量会自动成为window对象的属性，但是全局变量和window上定义的属性进行删除时有一点不同
+```javascript
+var age = 20
+window.color = 'red'
+
+// IE9以下都报错
+delete window.age // return false
+delete window.color // return true
+```
+
+## 21. DOM
+![节点](./img/4.png)
+### 操作api：
+- `appendChild`
+- `insertBefore`
+- `replaceChild`
+- `removeChild`
+- `cloneNode`(不会复制添加到DOM节点中的js事件/属性)
+- `normalize`
+
+### 常见节点
+- document.documentElement
+- document.body
+```html
+<body>
+  <ul>
+    <li>123</li>
+  </ul>
+</body>
+```
+- 如上结构打印`document.body.childNodes`长度为3，第1和第3个都是`Text`的`Node`，为换行符，只有中间第2个是`ul`标签
+
+### 常见属性
+- `document.title`
+- `document.URL`
+- `document.referer`
+- `document.domain`
+
+### 获取Node
+- `document.getElementById`
+- `document.getElementsByTagName`
+- `document.getElementsByClassName`
+- `document.getElementsByName`
+- 返回的是`HTMLCollection`，有`namedItem()`方法，可以筛选`name`属性
+
+### 设置属性
+- `getAttribute`
+- `setAttribute`
+- `removeAttribute`
+
+### 理解DOM
+- DOM操作是js中开销最大的部分，因为NodeList都是动态的，所以每次访问都会进行一次查询，为了提升性能，尽量减少DOM的操作
