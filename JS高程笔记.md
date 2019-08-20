@@ -1,4 +1,4 @@
-> 仅仅记录自己觉得重要的小细节点
+> 查缺补漏
 
 ## 1. defer和async属性
 
@@ -309,7 +309,7 @@ delete window.age // return false
 delete window.color // return true
 ```
 
-## 21. DOM
+## 21. DOM 1级（定义HTML和XML的底层结构）
 ![节点](./img/4.png)
 ### 操作api：
 - `appendChild`
@@ -342,6 +342,7 @@ delete window.color // return true
 - `document.getElementsByTagName`
 - `document.getElementsByClassName`
 - `document.getElementsByName`
+- `children`属性，`HTMLCollection`实例
 - 返回的是`HTMLCollection`，有`namedItem()`方法，可以筛选`name`属性
 
 ### 设置属性
@@ -351,3 +352,171 @@ delete window.color // return true
 
 ### 理解DOM
 - DOM操作是js中开销最大的部分，因为NodeList都是动态的，所以每次访问都会进行一次查询，为了提升性能，尽量减少DOM的操作
+
+## 22. `DOM`扩展
+- 主要增加了选择符API（Selectors API）和HTML5的扩展
+
+### `Selectors API`
+#### Selectors API Level 1
+- 兼容性IE8+
+- `querySelector`
+- `querySelectorAll`
+- `querySelectorAll`的返回值实际上相当于匹配元素的一个快照，而不是对文档进行动态的查询，更改了dom结构，先前的querySelectorAll的结果不会改变
+
+#### Selectors API Level 2
+- `matchesSelector`方法，接收`css`选择符，如果匹配返回`true`
+- 不同浏览器的实现不同，表现为不同的前缀，不建议使用
+
+![Chrome浏览器实现](./img/5.png)
+
+### 元素遍历
+> 由于IE9及之前对于换行的标签不返回文本节点，而其他浏览器会返回一个内容为换行符的文本节点，为了弥补差异
+
+- `childElementCount`: 返回子**元素**的个数
+- `firstElementChild`: 第一个子元素
+- `lastElementChild`: 最后一个子元素
+- `previousElementSibling`: 前一个同辈元素
+- `nextElementSibling`: 后一个同辈元素
+- 兼容IE9+
+
+### `HTML5`
+- `getElementsByClassName`是H5添加的
+- `classList`属性，提供了标签类名的list，是`DOMTokenList`的实例
+- `classList.add()`
+- `classList.contains()`
+- `classList.remove()`
+- `classList.toggle()`
+- 支持的浏览器Firefox 3.6+ 和 Chrome（遗憾脸）
+- 这些内置类型其实继承自`Object`
+
+![继承关系](./img/6.png)
+
+### 提高无障碍性的焦点管理
+- 通过`document.activeElement`属性来获取当前获得焦点的元素，通常是用户的输入，或者调用了`focus()`方法,文档加载期间默认指向`body`
+- `document.hasFocus()`来判断是否有焦点
+- 兼容性不错
+
+### *`HTMLDocument`(作用不大)
+- `document.readyState`: `loading` / `complete`
+- 兼容模式: `document.compatMode`
+- `head`: `document.head`相当于`body`和`document.body`
+- `document.charset`/`document.defaultCharset`: 默认`UTF-16`
+
+### 自定义属性
+- 必须添加前缀`data-`，通过元素的`dataset`来访问
+```html
+<p data-status="1"></p>
+<script>
+  document.getElementsByTagName('p')[0].dataset.status // 1
+</script>
+```
+
+### 其他
+- `innerHTML`只插入script标签后并不会运行，因为是一个“无作用域”的元素，如果需要使script生效必须插入一个“有作用域”的元素(空div不行)
+- `insertAdjacentHTML`: 插入html，在不同的位置`document.insertAdjacentHTML('位置', html)`
+- `beforebegin`: 在当前元素的前面插入一个元素作为它的`previousSibling`
+- `afterbegin`: 在当前元素里面插入一个元素作为第一个子元素
+- `beforeend`: 在当前元素里面插入一个元素作为最后一个子元素
+- `afterend`: 在当前元素的后面插入一个元素作为它的`nextSibling`
+- `element.scrollIntoView()`,滚动到元素所在位置
+- `contains()`
+```javascript
+document.documentElement.contains(document.body) // true
+```
+
+### 性能问题
+- 使用上述的API如`innerHTML`进行DOM操作时，如果将带有事件处理的元素或引用了js对象的元素删除时，其绑定的内容并未删除，将导致内存的占用
+
+## 23. DOM 2级（提供更多的交互能力）
+### DOM 2级视图
+- `contentDocument`: 提供对于`frame`和`iframe`的`document`获取
+- `contentWindow`: 获取`window`
+### DOM 2级样式
+- `float`用js访问的属性名是`cssFloat`，因为`float`是关键字
+- `cssText`
+- `length`
+- `parentRule`
+- `getPropertyCSSValue()`
+- `getPropertyPriority()`
+- `getPropertyValue()`
+- `item()`
+- `removeProperty`
+- `setProperty`
+- `window.defaultView.getComputedStyle()`: 获取所有的样式
+- offset 4个属性：`offsetTop`, `offsetLeft`, `offsetWidth`, `offsetHeight`
+
+![offsetParent](./img/7.png)
+
+- 客户区大小：`clientWidth`, `clientHeight`
+
+![offsetParent](./img/8.png)
+
+- 滚动大小：`scrollHeight`, `scrollWidth`, `scrollLeft`, `scrollTop`
+
+- 元素大小: `getBoundingClientRect()`
+
+### DOM 2级 遍历
+- DOM遍历： `NodeIterator`和`TreeWalker`
+
+## 24. 事件
+
+### 事件流(页面中接收事件的顺序)
+
+![事件冒泡](./img/9.png)
+
+![事件捕获](./img/10.png)
+
+![DOM事件流](./img/11.png)
+
+### 事件处理的不同方法
+
+- DOM 0级处理
+```javascript
+const ele = document.getElementById('demo')
+ele.onclick = function () {
+  console.log(this.id) // demo
+}
+// 通过设置null取消事件
+ele.onclick = null
+```
+
+- DOM 2级处理
+```javascript
+// 好处在于可以添加多个相同的事件，然后根据添加的顺序执行
+// true 捕获阶段 ， false 冒泡阶段
+const ele = document.getElementById('demo')
+ele.addEventListener('click', function () {
+  console.log(this.id)
+}, true)
+ele.addEventListener('click', function () {
+  console.log(this.className)
+}, true)
+// 先打印id，后打印class
+// 此处不能用箭头函数，否则this指向有问题，指向的其实是window
+function handler () {
+  console.log('handler')
+}
+ele.removeEventListener('click', handler, false)
+// removeEventListener的处理函数必须与添加时的处理函数是同一个
+```
+
+- IE的事件处理
+```javascript
+// IE9开始支持addEventListener
+// IE9以前的attachEvent只能在冒泡阶段执行事件
+// 点击事件的名称是onclick不是click
+const ele = document.getElementById('demo')
+const handler = function () {
+  console.log('handler')
+}
+ele.attachEvent('onclick', handler)
+ele.attachEvent('onclick', function () {
+  console.log('handler first')
+})
+// 后声明的事件处理先执行
+// 取消事件同样需要传入相同的函数，匿名函数的事件不能被取消
+ele.detachEvent('onclick', handler)
+```
+
+- IE的事件处理程序和DOM 0级的事件处理区别在于处理函数的作用域，IE的作用域是全局即window，而DOM 0级的作用域是调用它的元素节点
+
