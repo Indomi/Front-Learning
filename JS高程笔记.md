@@ -520,3 +520,80 @@ ele.detachEvent('onclick', handler)
 
 - IE的事件处理程序和DOM 0级的事件处理区别在于处理函数的作用域，IE的作用域是全局即window，而DOM 0级的作用域是调用它的元素节点
 
+- `target` 和 `currentTarget`
+```javascript
+document.body.onclick = function (e) {
+  e.currentTarget === document.body // true
+  // btn点击时
+  e.target === document.getElementById('btn') // true
+}
+// currentTarget是事件处理程序注册到的元素
+// 而target是事件真正的目标
+```
+
+- `event.eventPhase`: 1表示捕获阶段，2表示正处于目标，3表示冒泡阶段
+
+- IE的事件对象`event`:
+  - `srcElement`: 事件的目标，与`target`相同
+  - `returnValue`: `true`/`false`，与`preventDefault()`相同
+  - `cancelBubble`: `true`/`false`，与`stopPropagation()`相同
+
+- Image 和 Script
+  - img标签的load事件必须在设置src之前定义，因为一旦设置了src属性，资源就会开始下载
+  - script标签的load事件没有限制，只有在加入到文档中后才开始下载
+
+- 坐标位置
+  - clientX, clientY
+  - screenX, screenY
+  - pageX, pageY
+
+- HTML5事件
+  - `contextmenu`: 自定义右键菜单，通过该事件阻止默认右键菜单的开启，并控制自定义的右键菜单的显示
+  - `beforeunload`: 页面卸载前，用于实现常见的关闭某个标签页弹出确认关闭提示
+  - `DOMContentLoaded`: 形成完整DOM树后触发
+  - `readystatechange`: 文档加载不同阶段触发，具有属性readyState
+  - `hashchange`: `url`中的`hash`值改变时触发，是`vue-router`中`hash`模式路由的原理之一,`event`包含了属性`newURL`，`oldURL`（IE没有这两个属性）,兼容性IE8+，最好使用`location.hash`来确定
+  
+- 移动端设备事件
+  - `orientation`: 设备旋转时触发
+  - `deviceorientation`: 设备重力感应变化时触发，包含以下5个属性
+    - alpha：在围绕 z 轴旋转时（即左右旋转时）， y 轴的度数差；是一个介于 0 到 360 之间的浮点数。
+    - beta：在围绕 x 轴旋转时（即前后旋转时）， z 轴的度数差；是一个介于-180 到 180 之间的浮点数。
+    - gamma：在围绕 y 轴旋转时（即扭转设备时）， z 轴的度数差；是一个介于-90 到 90 之间的浮点数。
+    - absolute：布尔值，表示设备是否返回一个绝对值。
+    - compassCalibrated：布尔值，表示设备的指南针是否校准过。
+  ![deviceorientation](./img/12.png)
+  - `devicemotion`: 设备移动时触发，能获取到更多设备角度，加速度的信息
+
+
+### 事件委托
+
+- 利用事件冒泡的原理，在DOM树种层次尽量高的元素上添加事件处理程序，来处理后代触发的事件
+- 推荐事件委托的事件：`click`,`mousedown`,`mouseup`,`keydown`,`keyup`
+
+### 移除事件处理程序
+
+- 每当将事件处理程序指定给元素时，运行中的浏览器代码与支持页面交互的 JavaScript 代码之间就
+会建立一个连接。这种连接越多，页面执行起来就越慢。
+- 内存中留有那些过时不用的“空事件处理程序”（ dangling event handler），也是造成 Web 应用程序内存与性能问题的主要原因。
+
+### 模拟事件
+```javascript
+// 获取触发事件的元素
+const btn = document.getElementById('btn')
+// 创建事件
+const event =  document.createEvent('MouseEvents')
+// 初始化参数
+event.initMouseEvent('click', true, true, document.defaultView, 0, 0, 0, 0, 0, false, false, false, 0, null)
+// 触发事件
+btn.dispatchEvent(event)
+// IE中的事件模拟
+const btn = document.getElementById('btn')
+// 创建事件对象
+const event = document.createEventObject()
+// 初始化
+event.screenX = 100
+event.screenY = 0
+// 触发
+btn.fireEvent('onclick', event)
+```
