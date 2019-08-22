@@ -597,3 +597,89 @@ event.screenY = 0
 // 触发
 btn.fireEvent('onclick', event)
 ```
+## 25. 表单
+- 表单在js里对应`HTMLFormELement`类型，继承自`HTMLElment`，所以拥有元素的属性，也拥有自身的一些属性
+- 类似于`document.frames`,可以通过`document.forms`获取页面中所有的表单
+- `form.submit()`调用时不会触发`submit`事件，需要先验证表单数据`
+- `form.reset()`
+- 不同浏览器`submit`和`click`事件触发的先后顺序是不一样的
+- 不同浏览器`blur`和`change`事件触发的先后顺序也是不一样的
+- 同样，通过`form.elements`访问表单内的元素
+- 共有的表单字段属性：
+  - `disabled`
+  - `form`
+  - `name`
+  - `readOnly`
+  - `tabIndex`
+  - `type`
+  - `value`
+  - `autofocus`(h5新增)
+- 共有的方法：
+  - `focus()`
+  - `blur()`
+- 共有的事件：
+  - `blur`
+  - `change`
+  - `focus`
+- 文本框：`input` 和 `textarea`
+  - `textarea`是没有办法限制最大输入字符的
+  - `select()`选中所有文本，相应触发`select`事件
+  - `html5`中新增了`selectionStart`和`selectionEnd`两个属性来确定选中的文本，IE需要兼容：`document.selection.createRange().text`
+  - `html5`同样也为选择部分文本增加了api，使用`setSelectionRange()`类似于`substring`
+- 输入屏蔽，通过输入触发`keypress`事件，判断`e.charCode || e.keyCode`然后`String.fromCharCode()`转化为字符串，如果不符合就屏蔽默认行为`e.preventDefault()`
+- 自动切换焦点，通过判断maxLength来实现，大致如下
+```html
+<body>
+  <h2>自动切换焦点</h2>
+  <form action="#">
+    <label for="tel1">电话号码:</label>
+    <input type="text" name="tel1" id="txtTel1" maxlength="3">-
+    <input type="text" name="tel2" id="txtTel2" maxlength="4">-
+    <input type="text" name="tel3" id="txtTel3" maxlength="4">
+  </form>
+  <script>
+    var form = document.getElementsByTagName('form')[0]
+    var handleInput = function (e) {
+      const target = e.target || e.srcElement
+      if (target.value.length === target.maxLength) {
+        for(let i=0;i<form.elements.length;i++) {
+          if (form.elements[i] === target) {
+            if (form.elements[i+1]) {
+              form.elements[i+1].focus()
+            }
+          }
+        }
+      }
+    }
+    form.addEventListener('keyup', handleInput)
+  </script>
+</body>
+```
+- HTML5表单约束API
+  - `required`属性
+  - `input`新增了`email`/`url`的`type`属性
+  - `min`/`max`
+  - 为文本字段新增了`pattern`属性，用于正则验证表单
+  - `checkValidity()`检测某个字段是否有效，也可以用于整个表单整体检测是否有效
+  - `form`标签的`novalidate`属性，设置后禁用表单验证
+  - 某个提交按钮提交时禁用表单验证，可以使用`formnovalidate`属性
+- 选择框（下拉框），`<select>`对应`HTMLSelectElement`类型，提供了如下的方法和属性：
+  - `add(newOption, relOption)`
+  - `multiple`
+  - `remove(index)`
+  - `selectedIndex`: 选中项索引，未选中-1，多选返回第一项
+  - `size`：选择框中可见的行数
+  - `select`标签的`value`：
+    - 未选中：空字符
+    - 选中的`option`有`value`值：选中的`value`值
+    - 选中的`option`没有`value`值：选中的`option`的文本,`IE8`返回空字符串
+- `<option>`对应`HTMLOptionElement`类型，提供了如下的方法和属性：
+  - `index`: 索引
+  - `label`: 标签
+  - `selected`
+  - `text`
+  - `value`
+- 富文本编辑
+  - 思路1： 创建`iframe`，设置`designMode = "on"`来开启富文本编辑
+  - 思路2： 使用`contenteditable`属性
+- 操作富文本：利用`document.execCommand()`,对文档执行预定义的命令
