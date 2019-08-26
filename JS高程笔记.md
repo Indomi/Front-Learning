@@ -682,4 +682,126 @@ btn.fireEvent('onclick', event)
 - 富文本编辑
   - 思路1： 创建`iframe`，设置`designMode = "on"`来开启富文本编辑
   - 思路2： 使用`contenteditable`属性
-- 操作富文本：利用`document.execCommand()`,对文档执行预定义的命令
+- 操作富文本：利用`document.execCommand()`,对文档执行预定义的命令，来实现对文本的编辑，最后获取container内的html代码
+## 26. 跨文档消息传递
+- XDM: 跨文档消息传送
+- 发送方：`postMessage(<消息>, <接收的域>)`
+- 接收方：异步触发message事件，参数包括
+  - data: 数据
+  - origin: 发送方所在域
+  - source: 发送消息文档window对象的代理，并不是真正的window对象，能访问postMessage()方法发送回执
+  
+![postMessage](./img/13.png)
+- 接收与发送的延迟大概几毫秒，影响不大
+
+## 27. 拖放
+- 拖放一个元素依次会触发: `dragstart`, `drag`, `dragend`
+- 拖放进某个元素时，会触发：`dragenter`, `dragover`, `dragleave`/`drop`,在`dragenter`, `dragover`事件中阻止默认行为来实现可放入
+### 拖放的数据交换
+- dataTransfer: 有`getData()`和`setData()`两种方法,保存在dataTransfer中的数据只能在`drop`事件中去读取
+- 在拖动文字或者链接/图像时，浏览器会调用`setData()`方法保存成`text`或者`URL`
+
+## 28. URL状态管理
+- h5通过更新了history对象，实现了更多对url控制的可能
+- `history.pushState()`: 状态对象、新状态标题、相对URL
+- `history.replaceState()`: 更新当前状态，不会创建新的历史记录，只会重写当前状态
+- `window`的`popstate`事件: 事件中存在`state`属性，包含`pushState()`传入的状态对象
+- `vue-router`中`history`模式的实现原理
+
+## 29. 错误处理
+- try-catch: catch捕获的错误error是`Error`的实例，包含了`name`和`message`属性
+- `finally`内的语句一定会执行，会覆盖`try`块里的`return`语句
+- 异常的7种类型
+  - `Error`: 基类，
+  - `EvalError`: 没有把eval()当成函数使用时抛出
+  - `RangeError`: 数值超出范围
+  - `RefernceError`: 找不到对象（常见xx is not defined）
+  - `SyntaxError`: 语法错误
+  - `TypeError`: 变量类型不符合要求
+  - `URIError`: 在使用 `encodeURI()`或 `decodeURI()`，而 URI 格式不正确时
+- 自定义抛出错误：`throw`
+- 任何没有使用try-catch处理的错误都会触发error事件
+
+## 30. JSON
+- 类似javascript数据类型的数据格式（自我理解）
+### 不同于JS书写的点
+- 不支持`undefined`，函数，变量，实例
+- 简单分为3个类型：简单值、对象、数组
+- 对象的key必须用双引号，字符串只能用双引号
+### JSON对象
+- JSON.stringify(obj, <筛选>, <缩进>)
+```javascript
+var book = {
+  "title": "Professional JavaScript",
+  "authors": ["Nicholas C. Zakas"],
+  edition: 3,
+  year: 2011
+};
+var jsonText = JSON.stringify(book, null, 4);
+// result
+{
+    "title": "Professional JavaScript",
+    "authors": [
+    "Nicholas C. Zakas"
+    ],
+    "edition": 3,
+    "year": 2011
+}
+```
+- 最大缩进为10，任何大于10都转换为10
+- 对象定义`toJSON()`方法可以重写`JSON.stringify()`方法
+```javascript
+JSON.parse(str, function(key, value) {
+  // handle each key
+})
+```
+
+## 31. Ajax
+- 原生XMLHttpRequest支持到IE7,往前的版本需要进行兼容
+```javascript
+var xhr = new XMLHttpRequest()
+// 为了兼容使用DOM 0级方法，而不是使用addEventListener的DOM 2级事件
+xhr.onreadystatechange = function() {
+  if (xhr.readyState == 4) {
+    if ((xhr.status >= 200 && xhr.status < 300) || xhr.status == 304) {
+      // handle success
+    } else {
+      // handle fail
+    }
+  }
+}
+xhr.open('get', 'http://xxx.com/api/getxxx', true) // true表示异步，默认true
+xhr.setRequestHeader('header', 'value')
+xhr.send(null) // 无参数必须传null
+xhr.abort() // 取消请求
+```
+- GET和POST相比，POST消耗的资源会更多，而且GET速度最多可以达到POST两倍
+### XMLHttpRequest 2级
+- XMLHTTPRequest 1级规定了基本的实现细节，2级规范进一步增强了xhr的能力
+- `FormData`类型
+```javascript
+var form = new FormData()
+form.append(key, value)
+// or
+var form = new FormData(document.getElementsByTagName('form')[0])
+// use
+xhr.send(form)
+```
+- 超时设定
+```javascript
+xhr.timeout = 1000
+xhr.ontimeout = function () {
+  // timeout
+}
+// 此时，可能xhr.readyState = 4,访问try-catch会报错
+```
+- `overrideMimeType()`: 在`send`之前重写响应返回的类型,强制更改来确保正确的响应
+- 进度事件
+  - loadstart: 接受到第一个字节的响应数据
+  - progress：在接收响应期间不断触发，额外属性有`lengthComputable`进度是否可用,`position`已经接收字节,`totalSize`总字节
+  - error：请求发生错误
+  - abort：请求调用abort()终止后触发
+  - load：接收到完整的相应数据触发
+  - loadend：在通信完成或者因为error，abort，load事件后触发
+- load事件：新的XMLHttpRequest 2级规范中通过load事件代替了readyState为4时的情况
+
