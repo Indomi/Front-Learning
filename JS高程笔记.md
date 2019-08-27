@@ -805,3 +805,87 @@ xhr.ontimeout = function () {
   - loadend：在通信完成或者因为error，abort，load事件后触发
 - load事件：新的XMLHttpRequest 2级规范中通过load事件代替了readyState为4时的情况
 
+## 32. 函数柯里化
+- 用于创建已经设置好了1个或多个参数的函数
+```javascript
+function curry(fn) {
+  const args = Array.prototype.slice.call(arguments, 1)
+  return function () {
+    const innerArgs = Array.prototype.slice.call(arguments)
+    const totalArgs = args.concat(innerArgs)
+    return fn.apply(null, totalArgs)
+  }
+}
+function add(num1, num2) {
+  return num1 + num2
+}
+add(1, 2) // 3
+const curryAdd = curry(add, 1)
+curryAdd(3) // 4 
+```
+
+## 33. 对象防篡改
+- 不可扩展对象: `Object.preventExtensions(obj)` / `Object.isExtensible(obj)`
+- 密封对象：`Object.seal(obj)` / `Object.isSealed(obj)`
+- 冻结对象：`Object.freeze(obj)` / `Object.isFrozen(obj)`
+
+## 34. 数组分块
+- 核心思想就是将数组每一项相同的操作拆分到定时器中逐块执行，避免一次执行阻塞代码
+```javascript
+function chunk(array, process, context) {
+  setTimeout(() => {
+    let item = array.shift()
+    process.call(context, item)
+
+    if (array.length > 0) {
+      setTimeout(arguments.callee, 100)
+    }
+  }, 100)
+}
+```
+## 35. 节流
+```javascript
+function throttle(method, context, delay) {
+  clearTimeout(method.tId)
+  method.tId = setTimeout(() => {
+    method.call(context)
+  }, delay)
+}
+```
+
+## 36. 自定义事件
+```javascript
+function EventTarget() {
+  this.handlers = {}
+}
+EventTarget.prototype = {
+  constructor: EventTarget,
+  // 增加事件
+  addHandler: function(type, handler) {
+    if (typeof this.handlers[type] === 'undefined') {
+      this.handlers[type] = []
+    }
+    this.handlers[type].push(handler)
+  },
+  // 触发事件
+  fire: function(event) {
+    if (!event.target) {
+      event.target = this
+    }
+    if (this.handlers[event.type] instanceof Array) {
+      this.handlers[event.type].forEach(item => {
+        item(event)
+      })
+    }
+  },
+  // 移除
+  removeHandler: function(type, handler) {
+    if (this.handler[type] instanceof Array) {
+      const handlers = this.handlers[type]
+      this.handlers[type] = handlers.filter(item => {
+        return item !== handler
+      })
+    }
+  }
+}
+```
